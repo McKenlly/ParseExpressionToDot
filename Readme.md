@@ -7,4 +7,10 @@ Rule using:
 +  enter any expression for example: c+d+s*v/k without spaces
 
 You will create a new file with the extension .png
+
+
 For example:
+
+
+
+![c+d+s*v/k](https://github.com/McKenlly/ParseExpressionToDot/blob/master/picture.png)
