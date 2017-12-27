@@ -1,0 +1,7 @@
+digraph G {
+	Node1[label="+"];
+	Node2[label="4"];
+	Node3[label="5"];
+	Node1 -> Node2
+	Node1 -> Node3
+}

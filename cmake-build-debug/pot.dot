@@ -1,0 +1,15 @@
+digraph G {
+	Node1[label="+"];
+	Node2[label="*"];
+	Node3[label="/"];
+	Node1 -> Node2
+	Node1 -> Node3
+	Node3[label="4"];
+	Node5[label="5"];
+	Node2 -> Node3
+	Node2 -> Node5
+	Node3[label="8"];
+	Node5[label="4"];
+	Node2 -> Node3
+	Node2 -> Node5
+}
