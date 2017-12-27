@@ -1,1 +1,0 @@
-/usr/bin/c++  -g   CMakeFiles/ParseExpressionToDot.dir/parser.cpp.o CMakeFiles/ParseExpressionToDot.dir/TreeExpresssion.cpp.o  -o ParseExpressionToDot 

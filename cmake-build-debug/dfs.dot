@@ -1,3 +1,0 @@
-digraph G {
-	Node1[label="*"];
-	Node2[label="4"];
