@@ -1,81 +1,65 @@
-#include <iostream>
-#include <string>
-#include <zconf.h>
+//
+// Created by Oleg Morozenkov on 25.01.17.
+//
 
-#include "TreeExpresssion.h"
+#include <signal.h>
+#include <stdio.h>
+#include <exception>
 
+#include <tgbot/tgbot.h>
+#include "TreeExpression.h"
 using namespace std;
-void Help() {
-    std::cout << "Enter actions:" << std::endl;
-    std::cout << "1) Calculate expression" << std::endl;
-    std::cout << "2) Print all lexem from expression" << std::endl;
-    std::cout << "3) Create picture your expression tree" << std::endl;
-    return;
-}
-void Introduce() {
-    cout << "Hello from expression!" << endl;
-    cout << "Now you must enter an aripthmetic expression with variables, numbers, round brackets and set of operations ('+', '-', '/' and '*')" << endl;
-    cout << "If you use variables, application will ask you about their values after read expression. You can set it as by yourself and as by random." << endl;
-    cout << "Application will check expression after all complete values and will say, if expression will incorrect." << endl << endl;
-}
+using namespace TgBot;
+
+bool sigintGot = false;
+string introduce = "Hello from expression!\n" \
+					"Now you must enter an aripthmetic expression with variables, numbers, round brackets and set of operations ('+', '-', '/' and '*')\n" \
+					"Bot can format your expression on treeExpression" \
+					"Please, enter expression. Run command /expression";
+string uncorrectExpr = "Your expression is incorrect.";
 void CompileToDot();
 int main() {
-    string answer;
-    Introduce();
-    do {
-        string e;
-        cout << "Enter your expression: ";
-        getline(cin, e);
+	printf("Starting\n");
+	Bot bot("347206610:AAHXMoWj0QTpvyWWXOPIhdzUbIi2TwZ0zdI");
+	bot.getEvents().onCommand("start", [&bot](Message::Ptr message) {
+		bot.getApi().sendMessage(message->chat->id, introduce);
+	});
 
-        while (e.empty()) {
-            cout << "Your expression is empty. Please, try again: ";
-            getline(cin, e);
-        }
+	bot.getEvents().onCommand("expression", [&bot](Message::Ptr message) {
+		bot.getApi().sendMessage(message->chat->id, "Enter your expression:");
+		bot.getEvents().onAnyMessage([&bot](Message::Ptr message) {
+			Expression expression(message->text);
+			if (!expression.correct()) {
+				bot.getApi().sendMessage(message->chat->id, uncorrectExpr);
+			} else {
+				const string photoFilePath = "./Picture/default.png";
+				const string photoMimeType = "image/png";
+				Tree* tree = expression.createTree();
+				expression.ToDot(tree);
+				CompileToDot();
+				bot.getApi().sendPhoto(message->chat->id, InputFile::fromFile(photoFilePath, photoMimeType));
+				expression.deleteTree(&tree);
+			}
+		});
+	});
 
-        Expression expression(e);
+	signal(SIGINT, [](int s) {
+		printf("SIGINT got");
+		sigintGot = true;
+	});
+	try {
+		printf("Bot username: %s\n", bot.getApi().getMe()->username.c_str());
 
-        if (!expression.correct()) {
-            cout << "Your expression is incorrect." << endl <<
-                 "Sorry, it`s not my problem. If you want try again with correct expression" << endl;
-        } else {
-            Tree* tree = expression.createTree();
-            Help();
-            size_t action;
-            cin >> action;
-            switch (action) {
-                case 1: {
-                    cout << "Tree: ";
-                    expression.printTree(tree);
-                    cout << endl;
-                    break;
-                }
-                case 2: {
-                    try {
-                        cout << "Result: " << expression.calculate(&tree) << endl;
-                    }
-                    catch (const char* msg) {
-                        cout << endl << "Error: " << msg << endl;
-                    }
-                    break;
-                }
-                case 3: {
-                    expression.ToDot(tree);
-                    cout << "Do you want compile into picture(y/n): ";
-                    cin >> answer;
-                    if (answer == "y") {
-                        CompileToDot();
-                    }
-                    break;
-                }
-                default: {
-                    cout << "Uncorrect choice" << endl;
-                }
-            }
-            expression.deleteTree(&tree);
-        }
-        cout << endl << "Do you want to enter new expression? (y/n): ";
-        cin >>  answer;
-    } while (answer == "y");
+		TgLongPoll longPoll(bot);
+		while (!sigintGot) {
+			printf("Long poll started\n");
+			longPoll.start();
+		}
+	} catch (exception& e) {
+		printf("error: %s\n", e.what());
+	}
+
+	return 0;
 }
 
 void CompileToDot() {
